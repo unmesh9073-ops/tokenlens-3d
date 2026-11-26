@@ -1,5 +1,4 @@
 fastapi
-uvicorn[standard]
 pydantic
 python-dotenv
 regex
@@ -8,5 +7,3 @@ tokenizers
 numpy
 scikit-learn
 google-genai
-pytest
-httpx
