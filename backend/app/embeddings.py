@@ -8,7 +8,6 @@ import re
 
 from google import genai
 import numpy as np
-from sklearn.decomposition import PCA
 
 _EMBEDDING_CACHE: dict[str, list[float]] = {}
 _FALLBACK_DIM = 48
@@ -99,8 +98,8 @@ def _project_to_3d_coords(matrix: np.ndarray) -> np.ndarray:
     if np.allclose(centered, 0.0):
         coords = np.zeros((n_samples, 3), dtype=np.float64)
     else:
-        pca = PCA(n_components=n_components)
-        reduced = pca.fit_transform(centered)
+        u, s, _ = np.linalg.svd(centered, full_matrices=False)
+        reduced = u[:, :n_components] * s[:n_components]
         coords = np.zeros((n_samples, 3), dtype=np.float64)
         coords[:, :n_components] = reduced
 

@@ -5,5 +5,4 @@ regex
 tiktoken
 tokenizers
 numpy
-scikit-learn
 google-genai
