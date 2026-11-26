@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "skills": {
+    "apple-design": {
+      "source": "emilkowalski/skills",
+      "commit": "64eb3deb9a5fbfa041faf783e0bc3fd635872e9c",
+      "sourceType": "github",
+      "skillPath": "skills/apple-design/SKILL.md",
+      "computedHash": "163ba8b42c7d9d5ccb08674266d4727c9ec610b9d876c906b1f29ce5e0d933da"
+    },
+    "gemini-api-dev": {
+      "source": "google-gemini/gemini-skills",
+      "commit": "c4d0c62c1240e08a90546186bf320600ab6a039a",
+      "sourceType": "github",
+      "skillPath": "skills/gemini-api-dev/SKILL.md",
+      "computedHash": "b3823bd7210e46d4528ca85ebc03326842a6df47ced9a856a1729639f9756c12"
+    },
+    "threejs-react-three-fiber": {
+      "source": "CloudAI-X/threejs-skills",
+      "commit": "0e181866f095b5f06d005133876e926515390d95",
+      "sourceType": "github",
+      "skillPath": "skills/threejs-react-three-fiber/SKILL.md",
+      "computedHash": "68a27f2c540653a732e8339b35a51d135fc26acbd9a4258e02cc301e2290f594"
+    }
+  }
+}
