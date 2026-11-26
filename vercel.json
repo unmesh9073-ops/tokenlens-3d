@@ -3,13 +3,11 @@
   "services": {
     "frontend": {
       "framework": "vite",
-      "root": "frontend",
-      "routePrefix": "/"
+      "root": "frontend"
     },
     "backend": {
       "entrypoint": "app.main:app",
-      "root": "backend",
-      "routePrefix": "/api"
+      "root": "backend"
     }
   }
 }
