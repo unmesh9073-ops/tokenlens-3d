@@ -21,6 +21,7 @@ export function GuidedStoryOverlay() {
   const completedChapters = useStudioStore((s) => s.completedChapters)
 
   const selectedByteSpan = useStudioStore((s) => s.selectedByteSpan)
+  const activeSpace = useStudioStore((s) => s.activeSpace)
   const timelineStep = useStudioStore((s) => s.timelineStep)
   const manualTree = useStudioStore((s) => s.manualTree)
   const isCompareOpen = useStudioStore((s) => s.isCompareOpen)
@@ -56,7 +57,7 @@ export function GuidedStoryOverlay() {
       manualTree?.nodes.some((n) => n.token_id >= 256)
     ) {
       markChapterComplete('manual-lab')
-    } else if (chapter.id === 'multilingual-tax' && isCompareOpen) {
+    } else if (chapter.id === 'multilingual-tax' && (isCompareOpen || activeSpace === 'arena')) {
       markChapterComplete('multilingual-tax')
     } else if (
       chapter.id === 'regex-and-vectors' &&
@@ -71,6 +72,7 @@ export function GuidedStoryOverlay() {
     timelineStep,
     manualTree,
     isCompareOpen,
+    activeSpace,
     useRegex,
     vectorCompareIndices,
     markChapterComplete,
@@ -79,7 +81,7 @@ export function GuidedStoryOverlay() {
   if (mode !== 'guided') return null
 
   return (
-    <div className="pointer-events-none fixed bottom-[9.25rem] left-4 z-20 max-w-[calc(100vw-2rem)]">
+    <div className="pointer-events-none fixed bottom-24 left-6 z-20 max-w-[calc(100vw-3rem)]">
       <AnimatePresence mode="wait">
         {isMinimized ? (
           <motion.button
@@ -105,7 +107,7 @@ export function GuidedStoryOverlay() {
             exit={{ opacity: 0, y: 16 }}
             transition={{ type: 'spring', bounce: 0, duration: 0.32 }}
             aria-label="Guided Visual Story"
-            className="glass-panel-heavy pointer-events-auto w-[360px] max-w-[calc(100vw-2rem)] rounded-3xl p-4"
+            className="glass-panel-heavy pointer-events-auto w-[340px] max-w-[calc(100vw-3rem)] rounded-3xl p-4"
           >
             {/* Header & Chapter Progress Pills */}
             <div className="mb-2.5 flex items-center justify-between gap-2">

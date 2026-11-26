@@ -187,7 +187,7 @@ function TreeNodeMesh({
   )
 }
 
-function MergeTreeContent() {
+export function MergeTreeContent({ embedded = false }: { embedded?: boolean }) {
   const analysis = useStudioStore((s) => s.analysis)
   const labMode = useStudioStore((s) => s.labMode)
   const useRegex = useStudioStore((s) => s.useRegex)
@@ -451,7 +451,7 @@ function MergeTreeContent() {
         })}
       </group>
 
-      <TreeCameraRig bounds={layout.bounds} focusPosition={focusPosition} />
+      {!embedded && <TreeCameraRig bounds={layout.bounds} focusPosition={focusPosition} />}
     </>
   )
 }

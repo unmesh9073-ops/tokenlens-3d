@@ -380,7 +380,7 @@ function VectorSpaceStage({
   )
 }
 
-function PipelineContent() {
+export function PipelineContent() {
   const analysis = useStudioStore((s) => s.analysis)
   const labMode = useStudioStore((s) => s.labMode)
   const useRegex = useStudioStore((s) => s.useRegex)

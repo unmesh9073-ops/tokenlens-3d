@@ -1,4 +1,10 @@
-import type { CameraPreset, DiagramView, LabMode, TreeCameraPreset } from '../../store/useStudioStore'
+import type {
+  CameraPreset,
+  DiagramView,
+  LabMode,
+  SpatialVolume,
+  TreeCameraPreset,
+} from '../../store/useStudioStore'
 
 export interface GuidedChapter {
   id: string
@@ -8,6 +14,7 @@ export interface GuidedChapter {
   taskPrompt: string
   suggestedQuestion: string
   config: {
+    activeSpace: SpatialVolume
     activeDiagram: DiagramView
     labMode: LabMode
     useRegex: boolean
@@ -29,6 +36,7 @@ export const GUIDED_CHAPTERS: GuidedChapter[] = [
       'Click any 3D subword block or Token ID to trace its glowing lineage back to raw UTF-8 bytes.',
     suggestedQuestion: 'Walk me through these 5 stages step by step',
     config: {
+      activeSpace: 'pipeline',
       activeDiagram: 'pipeline',
       labMode: 'auto',
       useRegex: true,
@@ -46,6 +54,7 @@ export const GUIDED_CHAPTERS: GuidedChapter[] = [
       'Play or scrub the Merge Timeline to watch pairs combine, then click any merged node to inspect its Left & Right children.',
     suggestedQuestion: 'Animate how BPE merged this and explain the winning pair',
     config: {
+      activeSpace: 'tree',
       activeDiagram: 'tree',
       labMode: 'auto',
       useRegex: true,
@@ -63,6 +72,7 @@ export const GUIDED_CHAPTERS: GuidedChapter[] = [
     taskPrompt: 'Perform at least 1 manual merge to mint token #256.',
     suggestedQuestion: 'Which byte pair should I merge first and why?',
     config: {
+      activeSpace: 'pipeline',
       activeDiagram: 'pipeline',
       labMode: 'manual',
       useRegex: true,
@@ -80,6 +90,7 @@ export const GUIDED_CHAPTERS: GuidedChapter[] = [
       'Open Compare LLMs to compare GPT-4o (o200k), GPT-4 (cl100k), and our Educational BPE.',
     suggestedQuestion: 'Show why emojis and Hindi cost extra tokens',
     config: {
+      activeSpace: 'arena',
       activeDiagram: 'pipeline',
       labMode: 'auto',
       useRegex: true,
@@ -98,6 +109,7 @@ export const GUIDED_CHAPTERS: GuidedChapter[] = [
     suggestedQuestion:
       'Explain what changes when Regex is OFF and how 3D vectors measure similarity',
     config: {
+      activeSpace: 'vectors',
       activeDiagram: 'pipeline',
       labMode: 'auto',
       useRegex: true,

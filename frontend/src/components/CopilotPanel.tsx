@@ -187,7 +187,11 @@ export function CopilotPanel({ isOpen, onClose, health }: CopilotPanelProps) {
           exit={{ x: 32, opacity: 0 }}
           transition={{ type: 'spring', bounce: 0, duration: 0.36 }}
           aria-label="Ask Gemini Co-Pilot"
-          className="glass-panel-heavy pointer-events-auto flex h-[calc(100vh-12rem)] w-[348px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-3xl"
+          className={`glass-panel-heavy pointer-events-auto relative flex h-[calc(100vh-12rem)] w-[348px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-3xl transition-shadow duration-300 ${
+            isCopilotThinking
+              ? 'ring-1 ring-emerald-400/50 shadow-[0_0_28px_rgba(52,211,153,0.22)]'
+              : ''
+          }`}
         >
           {/* Chrome-style Header */}
           <div className="flex items-center justify-between border-b border-white/[0.1] px-4 py-3">

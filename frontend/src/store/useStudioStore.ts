@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { GUIDED_CHAPTERS } from '../components/guided/chapters'
 import { tokenizerClient } from '../api/tokenizerClient'
+import { playSpaceWhoosh, setSpatialSoundEnabled } from '../utils/spatialAudio'
 import type {
   AnalyzeResponse,
   CompareResponse,
@@ -15,6 +16,8 @@ import type {
 
 export type StudioMode = 'playground' | 'guided'
 export type DiagramView = 'pipeline' | 'tree'
+export type SpatialSpace = 'hub' | 'pipeline' | 'tree' | 'vectors' | 'arena'
+export type SpatialVolume = Exclude<SpatialSpace, 'hub'>
 export type LabMode = 'auto' | 'manual'
 export type CameraPreset = 'overview' | 'text' | 'bytes' | 'subwords' | 'ids' | 'vectors'
 export type TreeCameraPreset = 'forest' | 'leaves' | 'roots' | 'focus'
@@ -119,7 +122,15 @@ function computePairFrequencies(
 interface StudioState {
   mode: StudioMode
   activeDiagram: DiagramView
+  activeSpace: SpatialSpace
+  hoveredVolume: SpatialVolume | null
+  hubCarouselIndex: number
+  isSpotlightOpen: boolean
+  isControlsOpen: boolean
   isCopilotOpen: boolean
+  isSoundEnabled: boolean
+  selectedWorldPosition: [number, number, number] | null
+  mergeBurstEvent: { id: number; position: [number, number, number]; color: string } | null
   inputText: string
   useRegex: boolean
   activeTokenizerId: string
@@ -165,8 +176,17 @@ interface StudioState {
 
   setMode: (mode: StudioMode) => void
   setActiveDiagram: (diagram: DiagramView) => void
+  setActiveSpace: (space: SpatialSpace) => void
+  setHoveredVolume: (volume: SpatialVolume | null) => void
+  setHubCarouselIndex: (index: number) => void
+  setSpotlightOpen: (open: boolean) => void
+  toggleSpotlight: () => void
+  setControlsOpen: (open: boolean) => void
+  toggleControls: () => void
   setCopilotOpen: (open: boolean) => void
   toggleCopilot: () => void
+  toggleSound: () => void
+  triggerMergeBurst: (position: [number, number, number], color?: string) => void
   setInputText: (text: string) => void
   setUseRegex: (useRegex: boolean) => void
   setActiveTokenizerId: (id: string) => void
@@ -188,6 +208,7 @@ interface StudioState {
       tokenIndex?: number | null
       nodeId?: string | null
       info?: SelectedInspectorInfo | null
+      worldPosition?: [number, number, number] | null
     },
   ) => void
   clearSelection: () => void
@@ -216,7 +237,15 @@ interface StudioState {
 export const useStudioStore = create<StudioState>((set, get) => ({
   mode: 'playground',
   activeDiagram: 'pipeline',
-  isCopilotOpen: true,
+  activeSpace: 'hub',
+  hoveredVolume: null,
+  hubCarouselIndex: 0,
+  isSpotlightOpen: false,
+  isControlsOpen: false,
+  isCopilotOpen: false,
+  isSoundEnabled: true,
+  selectedWorldPosition: null,
+  mergeBurstEvent: null,
   inputText: 'Tokenization makes AI read!',
   useRegex: true,
   activeTokenizerId: 'default',
@@ -266,9 +295,38 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       get().setGuidedChapter(get().guidedChapterIndex)
     }
   },
-  setActiveDiagram: (activeDiagram) => set({ activeDiagram }),
+  setActiveDiagram: (activeDiagram) => set({ activeDiagram, activeSpace: activeDiagram }),
+  setActiveSpace: (activeSpace) => {
+    const prev = get().activeSpace
+    if (prev !== activeSpace) {
+      playSpaceWhoosh()
+    }
+    set((state) => ({
+      activeSpace,
+      activeDiagram:
+        activeSpace === 'pipeline' || activeSpace === 'tree' ? activeSpace : state.activeDiagram,
+      isControlsOpen: activeSpace === 'hub' ? false : state.isControlsOpen,
+      selectedWorldPosition: prev !== activeSpace ? null : state.selectedWorldPosition,
+      inspectorInfo: prev !== activeSpace ? null : state.inspectorInfo,
+    }))
+  },
+  setHoveredVolume: (hoveredVolume) => set({ hoveredVolume }),
+  setHubCarouselIndex: (hubCarouselIndex) =>
+    set({ hubCarouselIndex: ((hubCarouselIndex % 4) + 4) % 4 }),
+  setSpotlightOpen: (isSpotlightOpen) => set({ isSpotlightOpen }),
+  toggleSpotlight: () => set((state) => ({ isSpotlightOpen: !state.isSpotlightOpen })),
+  setControlsOpen: (isControlsOpen) => set({ isControlsOpen }),
+  toggleControls: () => set((state) => ({ isControlsOpen: !state.isControlsOpen })),
   setCopilotOpen: (isCopilotOpen) => set({ isCopilotOpen }),
   toggleCopilot: () => set((state) => ({ isCopilotOpen: !state.isCopilotOpen })),
+  toggleSound: () =>
+    set((state) => {
+      const next = !state.isSoundEnabled
+      setSpatialSoundEnabled(next)
+      return { isSoundEnabled: next }
+    }),
+  triggerMergeBurst: (position, color = '#a78bfa') =>
+    set({ mergeBurstEvent: { id: Date.now() + Math.random(), position, color } }),
   setInputText: (inputText) => set({ inputText }),
   setUseRegex: (useRegex) => set({ useRegex }),
   setActiveTokenizerId: (id) => set({ activeTokenizerId: id }),
@@ -318,12 +376,19 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     }
   },
 
-  setSelection: ({ byteSpan, tokenIndex = null, nodeId = null, info = null }) =>
+  setSelection: ({
+    byteSpan,
+    tokenIndex = null,
+    nodeId = null,
+    info = null,
+    worldPosition = null,
+  }) =>
     set({
       selectedByteSpan: byteSpan,
       selectedTokenIndex: tokenIndex,
       selectedNodeId: nodeId,
       inspectorInfo: info,
+      selectedWorldPosition: worldPosition,
     }),
 
   clearSelection: () =>
@@ -332,6 +397,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       selectedTokenIndex: null,
       selectedNodeId: null,
       inspectorInfo: null,
+      selectedWorldPosition: null,
       manualSelectedIndex: null,
     }),
 
@@ -535,7 +601,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
           break
         case 'switch_diagram':
           if (args.diagram === 'pipeline' || args.diagram === 'tree') {
-            set({ activeDiagram: args.diagram })
+            set({ activeDiagram: args.diagram, activeSpace: args.diagram })
             summaryParts.push(args.diagram === 'tree' ? '3D Merge Tree' : '3D Pipeline')
           }
           break
@@ -578,10 +644,13 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         case 'focus_camera': {
           const preset = String(args.preset ?? '')
           if (['forest', 'leaves', 'roots', 'focus'].includes(preset)) {
-            set({ treeCameraPreset: preset as TreeCameraPreset })
+            set({ treeCameraPreset: preset as TreeCameraPreset, activeSpace: 'tree', activeDiagram: 'tree' })
             summaryParts.push(`Camera -> ${preset}`)
-          } else if (['overview', 'text', 'bytes', 'subwords', 'ids', 'vectors'].includes(preset)) {
-            set({ cameraPreset: preset as CameraPreset })
+          } else if (preset === 'vectors') {
+            set({ cameraPreset: 'vectors', activeSpace: 'vectors' })
+            summaryParts.push('Camera -> vectors')
+          } else if (['overview', 'text', 'bytes', 'subwords', 'ids'].includes(preset)) {
+            set({ cameraPreset: preset as CameraPreset, activeSpace: 'pipeline', activeDiagram: 'pipeline' })
             summaryParts.push(`Camera -> ${preset}`)
           }
           break
@@ -600,8 +669,9 @@ export const useStudioStore = create<StudioState>((set, get) => ({
           break
         case 'open_compare_sheet':
           if (args.open === true) {
+            set({ activeSpace: 'arena' })
             void get().runComparison()
-            summaryParts.push('Opened LLM Compare')
+            summaryParts.push('Opened Model Arena')
           } else if (args.open === false) {
             set({ isCompareOpen: false })
           }
@@ -752,6 +822,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     const chapter = GUIDED_CHAPTERS[clamped]
     if (!chapter) return
     const { cfg } = { cfg: chapter.config }
+    get().setActiveSpace(cfg.activeSpace)
     set({
       guidedChapterIndex: clamped,
       activeDiagram: cfg.activeDiagram,
